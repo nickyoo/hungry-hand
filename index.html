@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Slot Machine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff2a6d;
+            --neon-blue: #05d9e8;
+            --neon-purple: #d100d1;
+            --dark-bg: #0a0e27;
+            --card-bg: #1a1f3a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --accent-glow: rgba(5, 217, 232, 0.5);
+        }
+
+```
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'JetBrains Mono', monospace;
+        background: var(--dark-bg);
+        color: var(--text-primary);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(255, 42, 109, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(5, 217, 232, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 20%, rgba(209, 0, 209, 0.05) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: slideDown 0.6s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    h1 {
+        font-family: 'Bungee', cursive;
+        font-size: clamp(2rem, 6vw, 4rem);
+        background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue), var(--neon-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 0 30px var(--accent-glow);
+        letter-spacing: 2px;
+    }
+
+    .subtitle {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+    }
+
+    .upload-section {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 2px solid rgba(5, 217, 232, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.6s ease-out 0.2s both;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(255, 42, 109, 0.1), rgba(5, 217, 232, 0.1));
+        border: 2px dashed var(--neon-blue);
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+    }
+
+    .file-input-label:hover {
+        background: linear-gradient(135deg, rgba(255, 42, 109, 0.2), rgba(5, 217, 232, 0.2));
+        border-color: var(--neon-pink);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 42, 109, 0.3);
+    }
+
+    .file-name {
+        margin-top: 1rem;
+        color: var(--neon-blue);
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    .main-content {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        position: relative;
+    }
+
+    .main-content.detailed-view {
+        grid-template-columns: 400px 1fr;
+        gap: 3rem;
+    }
+
+    .slot-container {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        border: 2px solid rgba(255, 42, 109, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: fadeIn 0.6s ease-out 0.4s both;
+        position: relative;
+    }
+
+    .slot-container::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue));
+        border-radius: 20px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+
+    .slot-container:hover::before {
+        opacity: 0.3;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 2rem;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .stat {
+        text-align: center;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-family: 'Bungee', cursive;
+    }
+
+    .slot-machine {
+        width: 100%;
+        max-width: 350px;
+        height: 200px;
+        background: linear-gradient(135deg, #0f1425, #1a1f3a);
+        border: 4px solid var(--neon-blue);
+        border-radius: 15px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 
+            inset 0 0 30px rgba(5, 217, 232, 0.3),
+            0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .slot-machine::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+        background-size: 20px 20px;
+        pointer-events: none;
+    }
+
+    .slot-reel {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.1s linear;
+        position: relative;
+    }
+
+    .slot-reel.spinning {
+        animation: spin 0.1s linear infinite;
+    }
+
+    .slot-reel.stopping {
+        animation: none;
+        transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    @keyframes spin {
+        from {
+            transform: translateY(0);
+        }
+        to {
+            transform: translateY(-200px);
+        }
+    }
+
+    .slot-item {
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-align: center;
+        padding: 1rem;
+        text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .spin-button {
+        padding: 1.2rem 3rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 30px rgba(255, 42, 109, 0.4);
+        font-family: 'Bungee', cursive;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .spin-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .spin-button:hover::before {
+        left: 100%;
+    }
+
+    .spin-button:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(255, 42, 109, 0.6);
+    }
+
+    .spin-button:active {
+        transform: translateY(-1px) scale(1.02);
+    }
+
+    .spin-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .detail-panel {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 2px solid rgba(5, 217, 232, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        transform: translateX(50px);
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        max-height: 800px;
+        overflow-y: auto;
+    }
+
+    .detail-panel.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .detail-panel::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .detail-panel::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .detail-panel::-webkit-scrollbar-thumb {
+        background: var(--neon-blue);
+        border-radius: 10px;
+    }
+
+    .detail-title {
+        font-family: 'Bungee', cursive;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--neon-blue);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .detail-content {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .detail-row {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 3px solid var(--neon-pink);
+        transition: all 0.3s ease;
+    }
+
+    .detail-row:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-left-color: var(--neon-blue);
+        transform: translateX(5px);
+    }
+
+    .detail-key {
+        font-size: 0.85rem;
+        color: var(--neon-blue);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .detail-value {
+        color: var(--text-primary);
+        word-break: break-word;
+        line-height: 1.6;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .main-content.detailed-view {
+            grid-template-columns: 1fr;
+        }
+
+        .slot-container {
+            padding: 2rem 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+        }
+
+        .stats-bar {
+            gap: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+        }
+
+        .spin-button {
+            padding: 1rem 2rem;
+            font-size: 0.95rem;
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
+    }
+
+    .spinning .slot-machine {
+        animation: pulse 0.5s ease-in-out infinite;
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎰 JSON SLOTS</h1>
+            <p class="subtitle">Load • Spin • Discover</p>
+        </header>
+
+```
+    <div class="upload-section">
+        <div class="file-input-wrapper">
+            <input type="file" id="jsonFile" accept=".json">
+            <label for="jsonFile" class="file-input-label">
+                <span>📁</span>
+                <span>Upload JSON File</span>
+            </label>
+        </div>
+        <div class="file-name" id="fileName"></div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="slot-container">
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-label">Total Items</div>
+                    <div class="stat-value" id="totalItems">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Respins</div>
+                    <div class="stat-value" id="respinCount">0</div>
+                </div>
+            </div>
+
+            <div class="slot-machine">
+                <div class="slot-reel" id="slotReel">
+                    <div class="slot-item">Load JSON to Start</div>
+                </div>
+            </div>
+
+            <button class="spin-button" id="spinButton" disabled>
+                🎲 SPIN
+            </button>
+        </div>
+
+        <div class="detail-panel" id="detailPanel">
+            <div class="empty-state">
+                <div class="empty-state-icon">🎯</div>
+                <p>Spin the slot machine to view details</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let jsonData = [];
+    let currentIndex = 0;
+    let respinCount = 0;
+    let isSpinning = false;
+
+    const elements = {
+        fileInput: document.getElementById('jsonFile'),
+        fileName: document.getElementById('fileName'),
+        slotReel: document.getElementById('slotReel'),
+        spinButton: document.getElementById('spinButton'),
+        totalItems: document.getElementById('totalItems'),
+        respinCount: document.getElementById('respinCount'),
+        detailPanel: document.getElementById('detailPanel'),
+        mainContent: document.getElementById('mainContent')
+    };
+
+    // File upload handler
+    elements.fileInput.addEventListener('change', handleFileUpload);
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        elements.fileName.textContent = `Loaded: ${file.name}`;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                jsonData = Array.isArray(data) ? data : [data];
+                
+                if (jsonData.length === 0) {
+                    alert('JSON file is empty!');
+                    return;
+                }
+
+                initializeSlotMachine();
+            } catch (error) {
+                alert('Invalid JSON file!');
+                console.error(error);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function initializeSlotMachine() {
+        elements.totalItems.textContent = jsonData.length;
+        elements.spinButton.disabled = false;
+        
+        // Populate initial reel with all items
+        populateReel();
+    }
+
+    function populateReel() {
+        elements.slotReel.innerHTML = '';
+        
+        // Create items for smooth spinning (3 full cycles)
+        const cycles = 3;
+        for (let i = 0; i < jsonData.length * cycles; i++) {
+            const item = jsonData[i % jsonData.length];
+            const displayText = getDisplayText(item);
+            const itemElement = document.createElement('div');
+            itemElement.className = 'slot-item';
+            itemElement.textContent = displayText;
+            elements.slotReel.appendChild(itemElement);
+        }
+    }
+
+    function getDisplayText(item) {
+        if (typeof item === 'string') return item;
+        if (typeof item === 'object' && item !== null) {
+            // Try to find a name, title, or id field
+            return item.name || item.title || item.id || JSON.stringify(item).substring(0, 30) + '...';
+        }
+        return String(item).substring(0, 30);
+    }
+
+    // Spin button handler
+    elements.spinButton.addEventListener('click', spinSlotMachine);
+
+    function spinSlotMachine() {
+        if (isSpinning || jsonData.length === 0) return;
+        
+        isSpinning = true;
+        elements.spinButton.disabled = true;
+        elements.slotReel.classList.add('spinning');
+        elements.slotReel.style.transform = 'translateY(0)';
+
+        // Random duration between 2-4 seconds
+        const spinDuration = 2000 + Math.random() * 2000;
+        
+        setTimeout(() => {
+            stopSpinning();
+        }, spinDuration);
+    }
+
+    function stopSpinning() {
+        // Pick a random item
+        currentIndex = Math.floor(Math.random() * jsonData.length);
+        respinCount++;
+        elements.respinCount.textContent = respinCount;
+
+        // Calculate final position to land on the selected item
+        const itemHeight = 200;
+        const finalCycle = 2; // Land on the second cycle
+        const finalPosition = -(finalCycle * jsonData.length + currentIndex) * itemHeight;
+
+        elements.slotReel.classList.remove('spinning');
+        elements.slotReel.classList.add('stopping');
+        elements.slotReel.style.transform = `translateY(${finalPosition}px)`;
+
+        setTimeout(() => {
+            elements.slotReel.classList.remove('stopping');
+            isSpinning = false;
+            elements.spinButton.disabled = false;
+            
+            // Show detail panel
+            showDetailPanel();
+            
+            // Slide slot machine to the left
+            elements.mainContent.classList.add('detailed-view');
+        }, 800);
+    }
+
+    function showDetailPanel() {
+        const selectedItem = jsonData[currentIndex];
+        
+        let detailHTML = '<div class="detail-title">📋 Details</div><div class="detail-content">';
+        
+        if (typeof selectedItem === 'object' && selectedItem !== null) {
+            for (const [key, value] of Object.entries(selectedItem)) {
+                const displayValue = typeof value === 'object' 
+                    ? JSON.stringify(value, null, 2) 
+                    : String(value);
+                
+                detailHTML += `
+                    <div class="detail-row">
+                        <div class="detail-key">${key}</div>
+                        <div class="detail-value">${displayValue}</div>
+                    </div>
+                `;
+            }
+        } else {
+            detailHTML += `
+                <div class="detail-row">
+                    <div class="detail-key">Value</div>
+                    <div class="detail-value">${String(selectedItem)}</div>
+                </div>
+            `;
+        }
+        
+        detailHTML += '</div>';
+        
+        elements.detailPanel.innerHTML = detailHTML;
+        
+        // Trigger animation
+        setTimeout(() => {
+            elements.detailPanel.classList.add('visible');
+        }, 100);
+    }
+</script>
+```
+
+</body>
+</html>
